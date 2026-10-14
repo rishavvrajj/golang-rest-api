@@ -8,31 +8,28 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-type HTTPServer struct {
-	Addr string `yaml:"address" env-required: "true"`
+type HttpServer struct {
+	Address string `yaml:"address" env-required:"true"`
 }
-
-// env-default:"production"
 
 type Config struct {
-	Env         string `yaml:"env" env:"Env" env-required:"true"`
-	StoragePath string `yaml:"storage_path" env-required:"true"`
-	HTTPServer  `yaml:"http_server"`
+	Env         string     `yaml:"env" env:"ENV" env-required:"true"`
+	StoragePath string     `yaml:"storage_path" env-required:"true"`
+	HttpServer  HttpServer `yaml:"http_server"`
 }
 
+// MustLoad loads configuration from YAML file and environment variables.
+// If config path is not provided via flag or env, defaults to "config/local.yaml".
 func MustLoad() *Config {
 	var configPath string
 
-	configPath = os.Getenv("CONFIG_PATH")
+	flag.StringVar(&configPath, "config", "", "path to config file")
+	flag.Parse()
 
 	if configPath == "" {
-		flags := flag.String("config", "", "path to the configuration file")
-		flag.Parse()
-
-		configPath = *flags
-
+		configPath = os.Getenv("CONFIG_PATH")
 		if configPath == "" {
-			log.Fatal("Config path is not set")
+			configPath = "config/local.yaml"
 		}
 	}
 
@@ -42,10 +39,8 @@ func MustLoad() *Config {
 
 	var cfg Config
 
-	err := cleanenv.ReadConfig(configPath, &cfg)
-
-	if err != nil {
-		log.Fatalf("Can't read config file: %s", err.Error())
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatalf("cannot read config: %s", err)
 	}
 
 	return &cfg
