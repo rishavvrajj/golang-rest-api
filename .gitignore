@@ -32,5 +32,6 @@ go.work.sum
 .idea/
 .vscode/
 
-# Storage
+# extra
 storage
+/config
